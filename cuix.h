@@ -1,30 +1,40 @@
 #define MAX_FIELD_SIZE 64
 
 enum objtype {
+    /* For objects */
     MENU,
     FORM,
     LIST,
-};
-
-enum entrytype {
+    /* For entries */
+    /* NB: LABEL must stay the first entry, as it is used to test if we have
+     * an object or an entry */
     LABEL,
     FIELD,
-    SUBMENU,
+    MENUENTRY
 };
+
+
+
+/* This is the type of the action to be executed when the entry has been
+ * successfully selected (in case of a menuentry) or filled (in case of a
+ * field). */
+typedef int(*action_fn_type)(char *);
+
 
 typedef struct entry {
     int type;
     char *data; /* contains label or submenu title */
-    void **result; /* in case of a field, store result here */
+    action_fn_type action;
 } entry;
 
 
 typedef struct object {
     int type;
     char *title;
-    void **entries; /* must be NULL terminated */
+    void **entries;
+    int alloced; /* defines the current size of entries */ 
+    int last; /* index of the first non-alloced entry */
 } object;
-
 
 
 /* Object definitions */
@@ -35,12 +45,11 @@ object *create_form (char *title);
 object *create_list (char *title, entry **entries);
 
 
-entry *create_menuentry (char *label);
+entry *create_menuentry (char *label, action_fn_type action);
 entry *create_label (char *label);
-/* result must be allocated to >= MAX_FIELD_SIZE bytes */
-entry *create_field (char *label, void **result);
+entry *create_field (char *label, action_fn_type action);
 
 void attach_submenu (object *father, object *child);
-void attach_entry (object *father, entry *child);
+void attach_entry (object *father, void *child);
 
 void display_object (object *obj);
