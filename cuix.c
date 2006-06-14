@@ -6,7 +6,7 @@
 #include "cuix.h"
 
 #define INIT_ENTRIES 8
-#define X0_OFFSET 2
+#define X0_OFFSET 4
 #define Y0_OFFSET 2
 #define Y_OFFSET 1
 
@@ -199,7 +199,7 @@ display_object (object *obj)
     {
         case LIST:
             w = get_labels_width (obj);
-            h = Y_OFFSET * obj->last + 2 * Y0_OFFSET + 1;
+            h = Y_OFFSET * obj->last + 2 * Y0_OFFSET;
             get_center (stdscr, w, h, &x, &y);
             win = newwin (h, w, y, x);
             box (win, 0, 0);
@@ -219,12 +219,12 @@ display_object (object *obj)
                 y += Y_OFFSET;
                 x = X0_OFFSET;
             }
+            refresh ();
+            wrefresh (win);
             break;
         default:
             break;
     }
-    /* update_panels (); */
-    /* doupdate (); */
 }
 
 int
@@ -287,9 +287,7 @@ int
 main ()
 {
     init_stuff ();
-    printf ("bli\n");
     my_list ();
-    printf ("prout\n");
     (void)getch ();
     endwin ();
 
