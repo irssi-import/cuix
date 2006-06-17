@@ -2,13 +2,14 @@
 #include <string.h>
 #include <stdio.h>
 #include <curses.h>
-#include <panel.h>
+#include <form.h>
 #include "cuix.h"
 
 #define INIT_ENTRIES 8
 #define X0_OFFSET 4
 #define Y0_OFFSET 2
 #define Y_OFFSET 1
+#define CUIX_FIELD_WIDTH 32
 
 object *
 create_object (char *title, int type, void **entries)
@@ -43,14 +44,14 @@ create_object (char *title, int type, void **entries)
 object *
 create_menu (char *title)
 {
-    return create_object (title, MENU, NULL);
+    return create_object (title, CUIX_MENU, NULL);
 }
 
 
 object *
 create_form (char *title)
 {
-    return create_object (title, FORM, NULL);
+    return create_object (title, CUIX_FORM, NULL);
 }
 
 
@@ -58,7 +59,7 @@ create_form (char *title)
 object *
 create_list (char *title, entry **entries)
 {
-    return create_object (title, LIST, (void **)entries);
+    return create_object (title, CUIX_LIST, (void **)entries);
 }
 
 entry *
@@ -80,20 +81,20 @@ create_entry (char *label, int type, action_fn_type action)
 entry *
 create_menuentry (char *label, action_fn_type action)
 {
-    return create_entry (label, MENUENTRY, action);
+    return create_entry (label, CUIX_MENUENTRY, action);
 }
 
 entry *
 create_label (char *label)
 {
-    return create_entry (label, LABEL, NULL);
+    return create_entry (label, CUIX_LABEL, NULL);
 }
 
 
 entry *
 create_field (char *label, action_fn_type action)
 {
-    return create_entry (label, FIELD, action);
+    return create_entry (label, CUIX_FIELD, action);
 }
 
 
@@ -134,7 +135,7 @@ attach_submenu (object *father, object *child)
 { 
 
     /* Check that both are really menus */
-    if (father->type != MENU || child->type != MENU)
+    if (father->type != CUIX_MENU || child->type != CUIX_MENU)
     {
         fprintf (stderr, "Typing error, trying to add %p (%d) as child of"
                 "%p (%d)\n", father, father->type, child, child->type);
@@ -155,7 +156,7 @@ get_labels_width (object *obj)
     for (i = 0; i < obj->last; i++)
     {
         e = (entry *)obj->entries[i];
-        if (e->type == LABEL)
+        if (e->type == CUIX_LABEL)
         {
             w = (w > strlen (e->data)) ? w : strlen (e->data);
         }
@@ -185,10 +186,12 @@ void
 display_object (object *obj)
 {
     WINDOW *win;
+    FORM *form;
+    FIELD **fields;
     entry *e;
     int i, x, y, w, h;
 
-    if (obj->type >= LABEL)
+    if (obj->type >= CUIX_LABEL)
     {
         fprintf (stderr, "Trying to display an entry %p (%d), terminating...\n",
                 obj, obj->type);
@@ -197,7 +200,7 @@ display_object (object *obj)
 
     switch (obj->type)
     {
-        case LIST:
+        case CUIX_LIST:
             w = get_labels_width (obj);
             h = Y_OFFSET * obj->last + 2 * Y0_OFFSET;
             get_center (stdscr, w, h, &x, &y);
@@ -209,7 +212,7 @@ display_object (object *obj)
             for (i = 0; i < obj->last; i++)
             {
                 e = (entry *)obj->entries[i];
-                if (e->type != LABEL)
+                if (e->type != CUIX_LABEL)
                 {
                     fprintf (stderr, "Non-label entry in a list.\n");
                     exit (1);
@@ -221,6 +224,36 @@ display_object (object *obj)
             }
             refresh ();
             wrefresh (win);
+            break;
+        case CUIX_FORM:
+            w = get_labels_width (obj);
+            w = (w > CUIX_FIELD_WIDTH + 2 * X0_OFFSET) ? w : CUIX_FIELD_WIDTH + 2 * X0_OFFSET;
+            h = Y_OFFSET * obj->last + 2 * Y0_OFFSET;
+            fields = calloc (obj->last + 1, sizeof(FIELD *));
+            for (i = 0; i < obj->last; i++) 
+            {
+                e = (entry *)obj->entries[i];
+                fields[i] = new_field (1, w, Y0_OFFSET + i * Y_OFFSET, X0_OFFSET, 0, 0);
+                if (e->type == CUIX_LABEL)
+                {
+                    field_opts_off (fields[i], O_ACTIVE);
+                }
+                set_field_buffer (fields[i], 0, e->data);
+                fprintf (stderr, "Added %s\n", e->data);
+            }
+            fields[obj->last] = NULL;
+            form = new_form (fields);
+            scale_form (form, &h, &w);
+            get_center (stdscr, h, w, &y, &x);
+            fprintf (stderr, "%d %d %d %d\n", w, h, y, x);
+            /* win = newwin (h, w, y, x); */
+            win = stdscr;
+            set_form_win (form, win);
+            set_form_sub (form, derwin(win, w, h, 2, 2));
+            post_form (form);
+            box (win, 0, 0);
+            wrefresh (win);
+            /* refresh (); */
             break;
         default:
             break;
@@ -270,6 +303,18 @@ my_list (void) {
     display_object (list);
 }
 
+void 
+my_form (void) {
+    object *list;
+    entry *bli1, *bli2;
+    list = create_form ("True!");
+    bli1 = create_label ("Sweden");
+    bli2 = create_label ("rulez!");
+    attach_entry (list, bli1);
+    attach_entry (list, bli2);
+    display_object (list);
+}
+
 
 /* This is only because we are compiling cuix outside of irssi so we don't
  * have access to all the window objects and things */
@@ -287,7 +332,7 @@ int
 main ()
 {
     init_stuff ();
-    my_list ();
+    my_form ();
     (void)getch ();
     endwin ();
 

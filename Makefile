@@ -2,7 +2,7 @@ CC = gcc
 SOURCES = cuix.c
 OBJ = $(SOURCES:.c=.o)
 CFLAGS = -g -Wall -W
-LDFLAGS = -lncurses -lpanel -lform
+LDFLAGS = -lncurses -lform
 TARGET = cuix-mockup
 
 all: $(TARGET)

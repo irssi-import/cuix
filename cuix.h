@@ -2,15 +2,15 @@
 
 enum objtype {
     /* For objects */
-    MENU,
-    FORM,
-    LIST,
+    CUIX_MENU,
+    CUIX_FORM,
+    CUIX_LIST,
     /* For entries */
     /* NB: LABEL must stay the first entry, as it is used to test if we have
      * an object or an entry */
-    LABEL,
-    FIELD,
-    MENUENTRY
+    CUIX_LABEL,
+    CUIX_FIELD,
+    CUIX_MENUENTRY
 };
 
 

@@ -1,0 +1,87 @@
+Index: textbuffer-view.c
+===================================================================
+--- textbuffer-view.c	(revision 4278)
++++ textbuffer-view.c	(working copy)
+@@ -1319,6 +1319,7 @@
+ void textbuffer_view_init(void)
+ {
+ 	linecache_tag = g_timeout_add(LINE_CACHE_CHECK_TIME, (GSourceFunc) sig_check_linecache, NULL);
++        cuix_active = 0;
+ }
+ 
+ void textbuffer_view_deinit(void)
+Index: textbuffer-view.h
+===================================================================
+--- textbuffer-view.h	(revision 4278)
++++ textbuffer-view.h	(working copy)
+@@ -147,4 +147,7 @@
+ void textbuffer_view_init(void);
+ void textbuffer_view_deinit(void);
+ 
++/* Says if cuix is active */
++int cuix_active;
++
+ #endif
+Index: textbuffer-commands.c
+===================================================================
+--- textbuffer-commands.c	(revision 4278)
++++ textbuffer-commands.c	(working copy)
+@@ -303,6 +303,11 @@
+ 	}
+ }
+ 
++static void cmd_cuix(void)
++{
++    cuix_active = 1 - cuix_active;
++}
++
+ void textbuffer_commands_init(void)
+ {
+ 	command_bind("clear", NULL, (SIGNAL_FUNC) cmd_clear);
+@@ -314,6 +319,7 @@
+ 	command_bind("scrollback end", NULL, (SIGNAL_FUNC) cmd_scrollback_end);
+ 	command_bind("scrollback redraw", NULL, (SIGNAL_FUNC) cmd_scrollback_redraw);
+ 	command_bind("scrollback status", NULL, (SIGNAL_FUNC) cmd_scrollback_status);
++	command_bind("cuix", NULL, (SIGNAL_FUNC) cmd_cuix);
+ 
+ 	command_set_options("clear", "all");
+ 
+@@ -331,6 +337,7 @@
+ 	command_unbind("scrollback end", (SIGNAL_FUNC) cmd_scrollback_end);
+ 	command_unbind("scrollback redraw", (SIGNAL_FUNC) cmd_scrollback_redraw);
+ 	command_unbind("scrollback status", (SIGNAL_FUNC) cmd_scrollback_status);
++	command_unbind("cuix", (SIGNAL_FUNC) cmd_cuix);
+ 
+ 	signal_remove("away mode changed", (SIGNAL_FUNC) sig_away_changed);
+ }
+Index: gui-printtext.c
+===================================================================
+--- gui-printtext.c	(revision 4278)
++++ gui-printtext.c	(working copy)
+@@ -97,6 +97,8 @@
+ {
+ 	next_xpos = xpos;
+ 	next_ypos = ypos;
++        if (cuix_active)
++            return;
+ 
+ 	printtext_gui(str);
+ 
+@@ -106,6 +108,8 @@
+ void gui_printtext_after(TEXT_DEST_REC *dest, LINE_REC *prev, const char *str)
+ {
+ 	GUI_WINDOW_REC *gui;
++        if (cuix_active)
++            return;
+ 
+ 	gui = WINDOW_GUI(dest->window);
+ 
+@@ -238,6 +242,8 @@
+ 	LINE_REC *insert_after;
+         LINE_INFO_REC lineinfo;
+ 	int fg, bg, flags, attr;
++        if (cuix_active)
++            return;
+ 
+ 	flags = GPOINTER_TO_INT(pflags);
+ 	fg = GPOINTER_TO_INT(fgcolor);
