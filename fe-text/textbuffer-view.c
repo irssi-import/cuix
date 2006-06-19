@@ -1319,6 +1319,7 @@ static int sig_check_linecache(void)
 void textbuffer_view_init(void)
 {
 	linecache_tag = g_timeout_add(LINE_CACHE_CHECK_TIME, (GSourceFunc) sig_check_linecache, NULL);
+        cuix_active = 0;
 }
 
 void textbuffer_view_deinit(void)

@@ -31,7 +31,8 @@ terminfo_sources = \
         terminfo-core.c
 
 curses_sources = \
-	term-curses.c
+	term-curses.c \
+	cuix-try.c
 
 if NEED_TPARM
 use_tparm_sources = $(tparm_sources)

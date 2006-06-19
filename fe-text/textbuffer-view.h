@@ -147,4 +147,7 @@ void textbuffer_view_redraw(TEXT_BUFFER_VIEW_REC *view);
 void textbuffer_view_init(void);
 void textbuffer_view_deinit(void);
 
+/* Says if cuix is active */
+int cuix_active;
+
 #endif

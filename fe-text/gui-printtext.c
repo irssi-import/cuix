@@ -97,6 +97,8 @@ void gui_printtext(int xpos, int ypos, const char *str)
 {
 	next_xpos = xpos;
 	next_ypos = ypos;
+        if (cuix_active)
+            return;
 
 	printtext_gui(str);
 
@@ -106,6 +108,8 @@ void gui_printtext(int xpos, int ypos, const char *str)
 void gui_printtext_after(TEXT_DEST_REC *dest, LINE_REC *prev, const char *str)
 {
 	GUI_WINDOW_REC *gui;
+        if (cuix_active)
+            return;
 
 	gui = WINDOW_GUI(dest->window);
 
@@ -238,6 +242,8 @@ static void sig_gui_print_text(WINDOW_REC *window, void *fgcolor,
 	LINE_REC *insert_after;
         LINE_INFO_REC lineinfo;
 	int fg, bg, flags, attr;
+        if (cuix_active)
+            return;
 
 	flags = GPOINTER_TO_INT(pflags);
 	fg = GPOINTER_TO_INT(fgcolor);
