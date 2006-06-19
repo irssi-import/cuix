@@ -26,19 +26,35 @@ Index: textbuffer-commands.c
 ===================================================================
 --- textbuffer-commands.c	(revision 4278)
 +++ textbuffer-commands.c	(working copy)
-@@ -303,6 +303,11 @@
+@@ -30,6 +30,7 @@
+ #include "printtext.h"
+ #include "gui-windows.h"
+ #include "textbuffer-reformat.h"
++#include "cuix-try.h"
+ 
+ /* SYNTAX: CLEAR [-all] [<refnum>] */
+ static void cmd_clear(const char *data)
+@@ -303,6 +304,19 @@
  	}
  }
  
 +static void cmd_cuix(void)
 +{
++    if (!cuix_active)
++    {
++        textbuffer_view_clear(WINDOW_GUI(active_win)->view);
++        cuix_try();
++    } else {
++        cuix_quit ();
++        textbuffer_view_clear(WINDOW_GUI(active_win)->view);
++    }
 +    cuix_active = 1 - cuix_active;
 +}
 +
  void textbuffer_commands_init(void)
  {
  	command_bind("clear", NULL, (SIGNAL_FUNC) cmd_clear);
-@@ -314,6 +319,7 @@
+@@ -314,6 +328,7 @@
  	command_bind("scrollback end", NULL, (SIGNAL_FUNC) cmd_scrollback_end);
  	command_bind("scrollback redraw", NULL, (SIGNAL_FUNC) cmd_scrollback_redraw);
  	command_bind("scrollback status", NULL, (SIGNAL_FUNC) cmd_scrollback_status);
@@ -46,7 +62,7 @@ Index: textbuffer-commands.c
  
  	command_set_options("clear", "all");
  
-@@ -331,6 +337,7 @@
+@@ -331,6 +346,7 @@
  	command_unbind("scrollback end", (SIGNAL_FUNC) cmd_scrollback_end);
  	command_unbind("scrollback redraw", (SIGNAL_FUNC) cmd_scrollback_redraw);
  	command_unbind("scrollback status", (SIGNAL_FUNC) cmd_scrollback_status);
@@ -85,3 +101,17 @@ Index: gui-printtext.c
  
  	flags = GPOINTER_TO_INT(pflags);
  	fg = GPOINTER_TO_INT(fgcolor);
+Index: Makefile.am
+===================================================================
+--- Makefile.am	(revision 4278)
++++ Makefile.am	(working copy)
+@@ -31,7 +31,8 @@
+         terminfo-core.c
+ 
+ curses_sources = \
+-	term-curses.c
++	term-curses.c \
++	cuix-try.c
+ 
+ if NEED_TPARM
+ use_tparm_sources = $(tparm_sources)
