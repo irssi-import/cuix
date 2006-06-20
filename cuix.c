@@ -9,7 +9,7 @@
 #define X0_OFFSET 4
 #define Y0_OFFSET 2
 #define Y_OFFSET 1
-#define CUIX_FIELD_WIDTH 32
+#define CUIX_FIELD_WIDTH 16
 
 object *
 create_object (char *title, int type, void **entries)
@@ -169,7 +169,7 @@ get_labels_width (object *obj)
 /* Puts in x and y the coordinates to center an object of size objw and objh
  * in the window win */
 void
-get_center (WINDOW *win, int objw, int objh, int *x, int *y)
+get_center (WINDOW *win, int objh, int objw, int *y, int *x)
 {
     int begx, begy, maxx, maxy, w, h;
     getbegyx (win, begy, begx);
@@ -178,6 +178,10 @@ get_center (WINDOW *win, int objw, int objh, int *x, int *y)
     h = maxy - begy;
     *x = (w - objw) / 2 + begx;
     *y = (h - objh) / 2 + begy;
+    if (*x < 0)
+        *x = 0;
+    if (*y < 0)
+        *y = 0;
 }
 
 
@@ -190,6 +194,7 @@ display_object (object *obj)
     FIELD **fields;
     entry *e;
     int i, x, y, w, h;
+    int ch;
 
     if (obj->type >= CUIX_LABEL)
     {
@@ -203,7 +208,7 @@ display_object (object *obj)
         case CUIX_LIST:
             w = get_labels_width (obj);
             h = Y_OFFSET * obj->last + 2 * Y0_OFFSET;
-            get_center (stdscr, w, h, &x, &y);
+            get_center (stdscr, h, w, &y, &x);
             win = newwin (h, w, y, x);
             box (win, 0, 0);
             x = X0_OFFSET;
@@ -237,30 +242,77 @@ display_object (object *obj)
                 if (e->type == CUIX_LABEL)
                 {
                     field_opts_off (fields[i], O_ACTIVE);
+                    field_opts_off (fields[i], O_EDIT);
+                    set_field_back  (fields[i], A_BOLD);
                 }
                 set_field_buffer (fields[i], 0, e->data);
-                fprintf (stderr, "Added %s\n", e->data);
             }
             fields[obj->last] = NULL;
             form = new_form (fields);
             scale_form (form, &h, &w);
+            h += Y0_OFFSET;
+            w += 2 * X0_OFFSET;
             get_center (stdscr, h, w, &y, &x);
-            fprintf (stderr, "%d %d %d %d\n", w, h, y, x);
-            /* win = newwin (h, w, y, x); */
-            win = stdscr;
+            win = newwin (h, w, y, x);
+            keypad (win, TRUE);
+            nonl ();
+            /* win = stdscr; */
             set_form_win (form, win);
-            set_form_sub (form, derwin(win, w, h, 2, 2));
+            set_form_sub (form, derwin(win, w, h, X0_OFFSET, Y0_OFFSET));
             post_form (form);
             box (win, 0, 0);
+            refresh ();
             wrefresh (win);
-            /* refresh (); */
+            while((ch = wgetch(win)) != '\n' && ch != 27 /* ESC */)
+            {       
+                fprintf (stderr,"pressed %d\n", ch);
+                switch(ch)
+                {       
+                    case KEY_DOWN:
+                        /* Go to next field */
+                        form_driver(form, REQ_NEXT_FIELD);
+                        /* Go to the end of the present buffer */
+                        /* Leaves nicely at the last character */
+                        form_driver(form, REQ_END_LINE);
+                        break;
+                    case KEY_UP:
+                        /* Go to previous field */
+                        form_driver(form, REQ_PREV_FIELD);
+                        form_driver(form, REQ_END_LINE);
+                        break;
+                    case KEY_BACKSPACE:
+                        form_driver(form, REQ_PREV_CHAR);
+                        form_driver(form, REQ_DEL_CHAR);
+                        break;
+                    case KEY_LEFT:
+                        form_driver(form, REQ_PREV_CHAR);
+                        break;
+                    case KEY_RIGHT:
+                        form_driver(form, REQ_NEXT_CHAR);
+                        break;
+                    default:
+                        /* If this is a normal character, it gets */
+                        /* Printed                                */    
+                        form_driver(form, ch);
+                        break;
+                }
+            }
+            unpost_form (form);
+            delwin (win);
+            refresh ();
+            for (i = 0; i < obj->last; i++) 
+            {
+                e = (entry *)obj->entries[i];
+            }
+
             break;
         default:
             break;
     }
+
 }
 
-int
+    int
 do_nothing (char *foo)
 {
     (void)foo;
@@ -290,7 +342,7 @@ my_menu (void) {
     /* Declare that the object is ready to be displayed and do it */
     display_object (root_menu);
 }
-
+ 
 void 
 my_list (void) {
     object *list;
@@ -306,12 +358,16 @@ my_list (void) {
 void 
 my_form (void) {
     object *list;
-    entry *bli1, *bli2;
+    entry *bli1, *bli2, *bli3, *bli4;
     list = create_form ("True!");
     bli1 = create_label ("Sweden");
     bli2 = create_label ("rulez!");
+    bli3 = create_field ("pritch!", do_nothing);
+    bli4 = create_field ("plaf!", do_nothing);
     attach_entry (list, bli1);
     attach_entry (list, bli2);
+    attach_entry (list, bli3);
+    attach_entry (list, bli4);
     display_object (list);
 }
 
@@ -333,7 +389,6 @@ main ()
 {
     init_stuff ();
     my_form ();
-    (void)getch ();
     endwin ();
 
     return 0;
