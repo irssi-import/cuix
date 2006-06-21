@@ -32,6 +32,7 @@ terminfo_sources = \
 
 curses_sources = \
 	term-curses.c \
+	cuix.c \
 	cuix-try.c
 
 if NEED_TPARM
@@ -40,6 +41,8 @@ endif
 
 if USE_CURSES
 use_term_sources = $(curses_sources)
+# XXX: make a clean statement in configure.in
+irssi_LDFLAGS += -lform -lpanel
 else
 use_term_sources = $(terminfo_sources)
 endif

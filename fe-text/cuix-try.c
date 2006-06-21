@@ -19,14 +19,18 @@ WINDOW *cuix_win;
 
 void cuix_try(void)
 {
+    /* 
     WINDOW *rw = root_window->win;
     cuix_win = newwin (10, 30, 2, 2);
     box (cuix_win, 0, 0);
     wmove (cuix_win, 1, 1);
-    waddstr (cuix_win, "Welcome to cuix!");
+    waddstr (cuix_win, "Enter your new nick");
     wrefresh (rw);
     wrefresh (cuix_win);
+    */
+    my_list ();
 }
+
 
 void cuix_quit(void)
 {

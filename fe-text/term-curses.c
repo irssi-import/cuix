@@ -23,6 +23,9 @@
 
 #include "term.h"
 #include "mainwindows.h"
+#include "cuix.h"
+#include "panel.h"
+#include "textbuffer-view.h"
 
 #if defined(USE_NCURSES) && !defined(RENAMED_NCURSES)
 #  include <ncurses.h>
@@ -349,14 +352,20 @@ void term_refresh_thaw(void)
 
 void term_refresh(TERM_WINDOW *window)
 {
+    if (!cuix_active) {
 	if (window != NULL)
 		wnoutrefresh(window->win);
 
 	if (freeze_refresh == 0) {
 		move(curs_y, curs_x);
 		wnoutrefresh(stdscr);
+                cuix_refresh ();
 		doupdate();
 	}
+    } else {
+        update_panels ();
+        doupdate ();
+    }
 }
 
 void term_stop(void)
