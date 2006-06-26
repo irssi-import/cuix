@@ -30,7 +30,6 @@
 #include "printtext.h"
 #include "gui-windows.h"
 #include "textbuffer-reformat.h"
-#include "cuix-try.h"
 #include "cuix.h"
 
 /* SYNTAX: CLEAR [-all] [<refnum>] */
@@ -310,12 +309,13 @@ static void cmd_cuix(void)
     if (!cuix_active)
     {
         /* textbuffer_view_clear(WINDOW_GUI(active_win)->view); */
-        cuix_try();
+        cuix_create();
+        cuix_active = 1;
     } else {
         cuix_destroy ();
+        cuix_active = 0;
         /* textbuffer_view_clear(WINDOW_GUI(active_win)->view); */
     }
-    cuix_active = 1 - cuix_active;
 }
 
 void textbuffer_commands_init(void)

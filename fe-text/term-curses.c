@@ -25,7 +25,6 @@
 #include "mainwindows.h"
 #include "cuix.h"
 #include "panel.h"
-#include "textbuffer-view.h"
 
 #if defined(USE_NCURSES) && !defined(RENAMED_NCURSES)
 #  include <ncurses.h>
