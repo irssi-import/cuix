@@ -9,7 +9,23 @@
 #  include <curses.h>
 #endif
 
-int cuix;
+/* int cuix_active; */
+
+
+void
+cuix_destroy (void)
+{
+    if (cuix_win)
+    {
+        del_panel (p_cuix);
+        delwin(cuix_win);
+    }
+    cuix_win = NULL;
+    cuix_active = 0;
+    update_panels ();
+    doupdate();
+    term_refresh (root_window);
+}
 
 void cuix_create(void)
 {
@@ -23,6 +39,7 @@ void cuix_create(void)
     wrefresh (cuix_win);
     */
     my_form ();
+    cuix_destroy ();
 }
 
 void
@@ -34,14 +51,4 @@ cuix_refresh (void)
     update_panels ();
 }
 
-void
-cuix_destroy (void)
-{
-    if (cuix_win)
-    {
-        del_panel (p_cuix);
-        delwin(cuix_win);
-    }
-    cuix_win = NULL;
-    term_refresh (root_window);
-}
+

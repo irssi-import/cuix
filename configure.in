@@ -354,6 +354,10 @@ if test "x$want_socks" = "xyes"; then
 	])
 fi
 
+if test "x$want_cuix" = "xyes"; then
+    AC_DEFINE(PROUT_CUIX, ,[Enable cuix support])
+fi
+
 dnl **
 dnl ** fe-text checks
 dnl **

@@ -23,6 +23,7 @@
 #include "module.h"
 #include "textbuffer-view.h"
 #include "utf8.h"
+#include "cuix.h"
 
 typedef struct {
 	char *name;

@@ -102,7 +102,7 @@ void gui_printtext(int xpos, int ypos, const char *str)
 	printtext_gui(str);
 
 	next_xpos = next_ypos = -1;
-        cuix_refresh ();
+        /* cuix_refresh (); */
 }
 
 void gui_printtext_after(TEXT_DEST_REC *dest, LINE_REC *prev, const char *str)
@@ -115,7 +115,7 @@ void gui_printtext_after(TEXT_DEST_REC *dest, LINE_REC *prev, const char *str)
 	gui->insert_after = prev;
 	format_send_to_gui(dest, str);
 	gui->use_insert_after = FALSE;
-        cuix_refresh ();
+        /* cuix_refresh (); */
 }
 
 static void remove_old_lines(TEXT_BUFFER_VIEW_REC *view)

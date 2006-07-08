@@ -309,10 +309,11 @@ static void cmd_cuix(void)
     if (!cuix_active)
     {
         /* textbuffer_view_clear(WINDOW_GUI(active_win)->view); */
-        cuix_create();
         cuix_active = 1;
+        cuix_create();
     } else {
-        cuix_destroy ();
+        /* should never been called */
+        /* cuix_destroy (); */
         cuix_active = 0;
         /* textbuffer_view_clear(WINDOW_GUI(active_win)->view); */
     }
