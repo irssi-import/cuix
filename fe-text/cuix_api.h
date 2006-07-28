@@ -76,8 +76,6 @@ void attach_entry (object *father, void *child);
 
 void display_object (object *obj);
 
-
-/* XXX: just for testing */
-void my_form (void);
+void my_menu(void);
 
 #endif /* __CUIX_API_H */

@@ -1,6 +1,7 @@
 #include "module.h"
 #include "settings.h"
 #include "cuix_api.h"
+#include "cuix_lib.h"
 #include "cuix.h"
 #include "term.h"
 #if defined(USE_NCURSES) && !defined(RENAMED_NCURSES)
@@ -25,6 +26,7 @@ cuix_destroy (void)
     update_panels ();
     doupdate();
     term_refresh (root_window);
+    irssi_redraw ();
 }
 
 void cuix_create(void)
@@ -38,7 +40,7 @@ void cuix_create(void)
     wrefresh (rw);
     wrefresh (cuix_win);
     */
-    my_form ();
+    home_menu (NULL);
     cuix_destroy ();
 }
 

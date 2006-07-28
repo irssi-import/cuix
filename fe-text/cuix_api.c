@@ -1,7 +1,6 @@
 #include "module.h"
 #include "settings.h"
 #include "term.h"
-#include "signals.h"
 #include "gui-windows.h"
 #include <stdarg.h>
 #if defined(USE_NCURSES) && !defined(RENAMED_NCURSES)
@@ -11,6 +10,7 @@
 #endif
 #include <form.h>
 #include <panel.h>
+#include <menu.h>
 
 
 #include "cuix_api.h"
@@ -43,7 +43,7 @@ create_object (char *title, int type, void **entries)
         obj->last = 0;
     } else {
         for (i = 0; ((entry **)entries)[i]; i++);
-        obj->alloced = i - 1;
+        obj->alloced = i;
         obj->last = i - 1;
         obj->entries = entries;
     }
@@ -130,11 +130,11 @@ attach_entry (object *father, void *child)
         {
             entries[i] = father->entries[i];
         }
+        fprintf(stderr, "father->entried: %p\n", father->entries);
         free (father->entries);
         father->entries = entries;
         father->alloced *= 2;
     }
-
     father->entries[father->last++] = child;
 }
 
@@ -162,14 +162,20 @@ get_labels_width (object *obj)
     int i;
     unsigned int w = 0;
     entry *e;
+    object *o;
 
     for (i = 0; i < obj->last; i++)
     {
         e = (entry *)obj->entries[i];
-        if (e->type == CUIX_LABEL)
+        if (e->type == CUIX_LABEL || e->type == CUIX_MENUENTRY)
         {
             w = (w > strlen (e->data)) ? w : strlen (e->data);
         }
+        if (e->type == CUIX_MENU) {
+            o = (object *)obj->entries[i];
+            w = (w > strlen (o->title)) ? w : strlen (o->title);
+        }
+
     }
     w += 2 * X0_OFFSET;
     return (int)w;
@@ -199,8 +205,12 @@ get_center (WINDOW *win, int objh, int objw, int *y, int *x)
 void
 display_object (object *obj)
 {
+    WINDOW *subwin;
     FORM *form;
+    MENU *menu;
     FIELD **fields;
+    ITEM **items, *cur_item;
+    object *o;
     entry *e;
     char *result;
     int i, x, y, w, h;
@@ -220,6 +230,7 @@ display_object (object *obj)
             w = get_labels_width (obj);
             h = Y_OFFSET * obj->last + 2 * Y0_OFFSET;
             get_center (root_window->win, h, w, &y, &x);
+            fprintf (stderr, "%d %d %d %d\n", h, w, y, x);
             cuix_win = newwin (h, w, y, x);
             box (cuix_win, 0, 0);
             p_cuix = new_panel(cuix_win);
@@ -235,16 +246,18 @@ display_object (object *obj)
                     exit (1);
                 } 
                 wmove (cuix_win,y,x);
-                waddstr (cuix_win,e->data); 
+                waddstr (cuix_win,e->data);
                 y += Y_OFFSET;
                 x = X0_OFFSET;
             }
             top_panel (p_cuix);
             update_panels();
             doupdate();
+            wgetch(cuix_win);
             /* refresh (); */
             /* wrefresh (cuix_win); */
             break;
+
         case CUIX_FORM:
             w = get_labels_width (obj);
             w = (w > CUIX_FIELD_WIDTH + 2 * X0_OFFSET) ? w : CUIX_FIELD_WIDTH + 2 * X0_OFFSET;
@@ -271,18 +284,14 @@ display_object (object *obj)
             cuix_win = newwin (h, w, y, x);
             keypad (cuix_win, TRUE);
             nonl ();
-            /* win = root_window->win; */
             set_form_win (form, cuix_win);
             set_form_sub (form, derwin(cuix_win, w, h, X0_OFFSET, Y0_OFFSET));
             post_form (form);
             box (cuix_win, 0, 0);
             p_cuix = new_panel (cuix_win);
             top_panel (p_cuix);
-            /* refresh (); */
-            /* wrefresh (cuix_win); */
             while((ch = wgetch(cuix_win)) != '\n' && ch != '\r' && ch != 27 /* ESC */)
             {       
-                /* fprintf (stderr,"pressed %d\n", ch); */
                 switch(ch)
                 {       
                     case KEY_DOWN:
@@ -325,119 +334,77 @@ display_object (object *obj)
                 }
             }
             unpost_form (form);
-            /* del_panel (p_cuix); */
-            /* delwin (cuix_win); */
-            /* cuix_win = NULL; */
-            /* p_cuix = NULL; */
-            /* update_panels (); */
-            /* doupdate (); */
 
             break;
-        default:
-            break;
+
+        case CUIX_MENU:
+            w = get_labels_width (obj);
+            w = (w > CUIX_FIELD_WIDTH + 2 * X0_OFFSET) ? w : CUIX_FIELD_WIDTH + 2 * X0_OFFSET;
+            h = Y_OFFSET * obj->last + 2 * Y0_OFFSET;
+            items = calloc (obj->last + 1, sizeof(ITEM *));
+            for (i = 0; i < obj->last; i++) 
+            {
+                e = (entry *)obj->entries[i];
+                o = (object *)obj->entries[i];
+                if (e->type == CUIX_MENUENTRY)
+                {
+                    items[i] = new_item (e->data, "");
+                    set_item_userptr (items[i], (void*)e);
+                } else {
+                    if (e->type == CUIX_LABEL) {
+                        items[i] = new_item (e->data, "");
+                        item_opts_off (items[i], O_SELECTABLE);
+                    } else {
+                        items[i] = new_item (o->title, " (SUB) ");
+                        set_item_userptr (items[i], (void*)o);
+                    }
+                }
+            }
+            items[obj->last] = NULL;
+            menu = new_menu (items);
+            set_menu_mark (menu, " * ");
+            scale_menu (menu, &h, &w);
+            h += 4 * Y0_OFFSET;
+            w += 4 * X0_OFFSET;
+            get_center (root_window->win, h, w, &y, &x);
+             cuix_win = newwin (h, w, y, x);
+            keypad (cuix_win, TRUE);
+            nonl ();
+            set_menu_win (menu, cuix_win);
+            subwin = derwin (cuix_win, h - 2 * Y0_OFFSET, w - 2 * X0_OFFSET, Y0_OFFSET, X0_OFFSET);
+            set_menu_sub (menu, subwin);
+            box (cuix_win, 0, 0);
+            post_menu (menu);
+            p_cuix = new_panel (cuix_win);
+            top_panel (p_cuix);
+            while((ch = wgetch(cuix_win)) != 27 /* ESC */)
+            {       
+                switch(ch)
+                {       
+                    case KEY_DOWN:
+                        menu_driver(menu, REQ_DOWN_ITEM);
+                        break;
+                    case KEY_UP:
+                        menu_driver(menu, REQ_UP_ITEM);
+                        break;
+                    case '\n':
+                    case '\r':
+                        cur_item = current_item(menu);
+                        e = (entry *)item_userptr(cur_item);
+                        o = (object *)item_userptr(cur_item);
+                        if (e->type == CUIX_MENUENTRY)
+                        {
+                            e->action ("");
+                        } else {
+                            display_object (o);
+                        }
+                        goto end;
+                        break;
+                    default:
+                        break;
+                }
+            }
+end:
+            unpost_menu (menu);
     }
 }
-
-
-
-/* Usage: irssi_command(server, witem, cmd, arg1, arg2, argn, NULL) */
-void irssi_command(SERVER_REC *server, WI_ITEM_REC *witem, const char *cmd, ...)
-{
-    GString *gstr;
-    char *arg; 
-    char *cmdargs, *cmdname;
-    va_list ap;
-
-    gstr = g_string_new("");
-    
-    va_start(ap, cmd);
-    while ((arg = va_arg(ap, char *)) != NULL)
-    { 
-        g_string_append(gstr, arg); 
-        g_string_append_c(gstr, ' ');
-    }
-    va_end(ap);
-
-    cmdargs = g_string_free(gstr, FALSE);
-    cmdname = g_strconcat("NICK ", cmd, NULL);
-
-    signal_emit(cmdname, 3, cmdargs, server, witem);
-  
-    g_free(cmdname);
-    g_free(cmdargs);
-}
-
-    int
-do_nothing (char *foo)
-{
-    (void)foo;
-    return 0;
-}
-
-int
-change_nick (char *nick)
-{
-    SERVER_REC *server;
-    WI_ITEM_REC *wiitem;
-    if (active_win == NULL) {
-        server = NULL;
-        wiitem = NULL;
-    } else {
-        server = active_win->active_server != NULL ?
-            active_win->active_server : active_win->connect_server;
-        wiitem = active_win->active;
-    } 
-    fprintf (stderr, "nick: %s, %d\n", nick, strlen(nick));
-    signal_emit("command nick", 3, nick, server, wiitem);
-    return 0;
-}
-
-void
-my_menu (void) {
-
-    /* Objects declaration */
-    object *root_menu, *submenu;
-    entry *label11, *label21, *label22;
-
-    /* Objects initialisation */
-    root_menu = create_menu ("My root menu");
-    submenu = create_menu ("My submenu");
-    label11 = create_menuentry ("Sweden", do_nothing);
-    label21 = create_menuentry ("is a", do_nothing);
-    label22 = create_menuentry ("beautiful country", do_nothing);
-
-    /* Layout */
-    attach_submenu (root_menu, submenu);
-    attach_entry (root_menu, (void *)label11);
-    attach_entry (submenu, (void *)label21);
-    attach_entry (submenu, (void *)label22);
-
-    /* Declare that the object is ready to be displayed and do it */
-    display_object (root_menu);
-}
- 
-void 
-my_list (void) {
-    object *list;
-    entry *bli1, *bli2;
-    list = create_list ("True!", NULL);
-    bli1 = create_label ("Sweden");
-    bli2 = create_label ("rulez!");
-    attach_entry (list, bli1);
-    attach_entry (list, bli2);
-    display_object (list);
-}
-
-void 
-my_form (void) {
-    object *list;
-    entry *bli1, *bli2;
-    list = create_form ("True!");
-    bli1 = create_label ("Enter your new nick");
-    bli2 = create_field ("", change_nick);
-    attach_entry (list, bli1);
-    attach_entry (list, bli2);
-    display_object (list);
-}
-
-

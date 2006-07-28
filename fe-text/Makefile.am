@@ -35,6 +35,7 @@ curses_sources = \
 
 cuix_sources = \
 	cuix_api.c \
+	cuix_lib.c \
 	cuix.c
 
 if NEED_TPARM
@@ -49,7 +50,7 @@ endif
 
 if USE_CUIX
 use_term_sources += $(cuix_sources)
-irssi_LDFLAGS += -lform -lpanel
+irssi_LDFLAGS += -lform -lpanel -lmenu
 endif
 
 
