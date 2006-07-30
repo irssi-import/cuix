@@ -324,13 +324,15 @@ display_object (object *obj)
                 }
             }
             form_driver (form, REQ_VALIDATION);
-            for (i = 0; i < obj->last; i++) 
-            {
-                e = (entry *)obj->entries[i];
-                if (e->type == CUIX_FIELD)
+            if (ch != 27) {
+                for (i = 0; i < obj->last; i++) 
                 {
-                    result = field_buffer(fields[i],0);
-                    e->action (result);
+                    e = (entry *)obj->entries[i];
+                    if (e->type == CUIX_FIELD)
+                    {
+                        result = field_buffer(fields[i],0);
+                        e->action (result);
+                    }
                 }
             }
             unpost_form (form);
