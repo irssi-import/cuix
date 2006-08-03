@@ -13,7 +13,7 @@
 #include <menu.h>
 
 
-#include "cuix_api.h"
+#include "cuix-api.h"
 
 #define INIT_ENTRIES 8
 #define X0_OFFSET 4
@@ -21,22 +21,19 @@
 #define Y_OFFSET 1
 #define CUIX_FIELD_WIDTH 16
 
-object *
-create_object (char *title, int type, void **entries)
+object *create_object (char *title, int type, void **entries)
 {
     object *obj;
     void **new_entries;
     int i;
 
     obj = g_malloc (sizeof(object));
-    if (!obj)
-    {
+    if (!obj) {
         return NULL;
     }
     obj->type = type;
     obj->title = title;
-    if (!entries)
-    {
+    if (!entries) {
         new_entries = g_new0 (void *, INIT_ENTRIES);
         obj->entries = new_entries;
         obj->alloced = INIT_ENTRIES;
@@ -51,35 +48,30 @@ create_object (char *title, int type, void **entries)
 }
 
 
-object *
-create_menu (char *title)
+object *create_menu (char *title)
 {
     return create_object (title, CUIX_MENU, NULL);
 }
 
 
-object *
-create_form (char *title)
+object *create_form (char *title)
 {
     return create_object (title, CUIX_FORM, NULL);
 }
 
 
 /* entries must be NULL terminated */
-object *
-create_list (char *title, entry **entries)
+object *create_list (char *title, entry **entries)
 {
     return create_object (title, CUIX_LIST, (void **)entries);
 }
 
-entry *
-create_entry (char *label, int type, action_fn_type action)
+entry *create_entry (char *label, int type, action_fn_type action)
 {
     entry *entry;
     
     entry = g_malloc (sizeof(object));
-    if (!entry)
-    {
+    if (!entry) {
         return NULL;
     }
     entry->type = type;
@@ -88,21 +80,18 @@ create_entry (char *label, int type, action_fn_type action)
     return entry;
 }
 
-entry *
-create_menuentry (char *label, action_fn_type action)
+entry *create_menuentry (char *label, action_fn_type action)
 {
     return create_entry (label, CUIX_MENUENTRY, action);
 }
 
-entry *
-create_label (char *label)
+entry *create_label (char *label)
 {
     return create_entry (label, CUIX_LABEL, NULL);
 }
 
 
-entry *
-create_field (char *label, action_fn_type action)
+entry *create_field (char *label, action_fn_type action)
 {
     return create_entry (label, CUIX_FIELD, action);
 }
@@ -110,27 +99,23 @@ create_field (char *label, action_fn_type action)
 
 
 /* Adds child at the last position of father->entries */
-void 
-attach_entry (object *father, void *child)
+void attach_entry (object *father, void *child)
 {
     void **entries;
     int i;
 
     /* Check that we have enough space in father->entries, otherwise alloc
      * twice more than previously */
-    if (father->last >= father->alloced)
-    {
+    if (father->last >= father->alloced) {
         entries = g_new0 (void *,2 * father->alloced);
-        if (!entries)
-        {
+        if (!entries) {
             fprintf (stderr, "Problem with memory allocation, quitting now...\n");
             exit (1);
         }
-        for (i = 0; i < father->alloced; i++)
-        {
+        for (i = 0; i < father->alloced; i++) {
             entries[i] = father->entries[i];
         }
-        free (father->entries);
+        g_free (father->entries);
         father->entries = entries;
         father->alloced *= 2;
     }
@@ -139,13 +124,11 @@ attach_entry (object *father, void *child)
 
 
 /* Adds a submenu to father */
-void
-attach_submenu (object *father, object *child)
+void attach_submenu (object *father, object *child)
 { 
 
     /* Check that both are really menus */
-    if (father->type != CUIX_MENU || child->type != CUIX_MENU)
-    {
+    if (father->type != CUIX_MENU || child->type != CUIX_MENU) {
         fprintf (stderr, "Typing error, trying to add %p (%d) as child of"
                 "%p (%d)\n", father, father->type, child, child->type);
         exit (1);
@@ -155,19 +138,16 @@ attach_submenu (object *father, object *child)
 
 
 /* Returns the maximum width occupied by labels */
-int
-get_labels_width (object *obj)
+int get_labels_width (object *obj)
 {
     int i;
     unsigned int w = 0;
     entry *e;
     object *o;
 
-    for (i = 0; i < obj->last; i++)
-    {
+    for (i = 0; i < obj->last; i++) {
         e = (entry *)obj->entries[i];
-        if (e->type == CUIX_LABEL || e->type == CUIX_MENUENTRY)
-        {
+        if (e->type == CUIX_LABEL || e->type == CUIX_MENUENTRY) {
             w = (w > strlen (e->data)) ? w : strlen (e->data);
         }
         if (e->type == CUIX_MENU) {
@@ -183,8 +163,7 @@ get_labels_width (object *obj)
 
 /* Puts in x and y the coordinates to center an object of size objw and objh
  * in the window win */
-void
-get_center (WINDOW *win, int objh, int objw, int *y, int *x)
+void get_center (WINDOW *win, int objh, int objw, int *y, int *x)
 {
     int begx, begy, maxx, maxy, w, h;
     getbegyx (win, begy, begx);
@@ -201,8 +180,7 @@ get_center (WINDOW *win, int objh, int objw, int *y, int *x)
 
 
 
-void
-display_object (object *obj)
+void display_object (object *obj)
 {
     WINDOW *subwin;
     FORM *form;
@@ -216,15 +194,13 @@ display_object (object *obj)
     int ch;
     p_main = new_panel(root_window->win);
 
-    if (obj->type >= CUIX_LABEL)
-    {
+    if (obj->type >= CUIX_LABEL) {
         fprintf (stderr, "Trying to display an entry %p (%d), terminating...\n",
                 obj, obj->type);
         exit (1);
     }
 
-    switch (obj->type)
-    {
+    switch (obj->type) {
         case CUIX_LIST:
             w = get_labels_width (obj);
             h = Y_OFFSET * obj->last + 2 * Y0_OFFSET;
@@ -235,11 +211,9 @@ display_object (object *obj)
             x = X0_OFFSET;
             y = Y0_OFFSET;
 
-            for (i = 0; i < obj->last; i++)
-            {
+            for (i = 0; i < obj->last; i++) {
                 e = (entry *)obj->entries[i];
-                if (e->type != CUIX_LABEL)
-                {
+                if (e->type != CUIX_LABEL) {
                     fprintf (stderr, "Non-label entry in a list.\n");
                     exit (1);
                 } 
@@ -258,15 +232,15 @@ display_object (object *obj)
 
         case CUIX_FORM:
             w = get_labels_width (obj);
-            w = (w > CUIX_FIELD_WIDTH + 2 * X0_OFFSET) ? w : CUIX_FIELD_WIDTH + 2 * X0_OFFSET;
+            w = (w > CUIX_FIELD_WIDTH + 2 * X0_OFFSET) ?
+                w : CUIX_FIELD_WIDTH + 2 * X0_OFFSET;
             h = Y_OFFSET * obj->last + 2 * Y0_OFFSET;
             fields = g_new0 (FIELD *, obj->last + 1);
-            for (i = 0; i < obj->last; i++) 
-            {
+            for (i = 0; i < obj->last; i++) {
                 e = (entry *)obj->entries[i];
-                fields[i] = new_field (1, w, Y0_OFFSET + i * Y_OFFSET, X0_OFFSET, 0, 0);
-                if (e->type == CUIX_LABEL)
-                {
+                fields[i] = new_field (1, w,
+                        Y0_OFFSET + i * Y_OFFSET, X0_OFFSET, 0, 0);
+                if (e->type == CUIX_LABEL) {
                     field_opts_off (fields[i], O_ACTIVE);
                     field_opts_off (fields[i], O_EDIT);
                     set_field_back  (fields[i], A_BOLD);
@@ -288,10 +262,8 @@ display_object (object *obj)
             box (cuix_win, 0, 0);
             p_cuix = new_panel (cuix_win);
             top_panel (p_cuix);
-            while((ch = wgetch(cuix_win)) != '\n' && ch != '\r' && ch != 27 /* ESC */)
-            {       
-                switch(ch)
-                {       
+            while((ch = wgetch(cuix_win)) != '\n' && ch != '\r' && ch != 27 /* ESC */) {       
+                switch(ch) {       
                     case KEY_DOWN:
                         /* Go to next field */
                         form_driver(form, REQ_NEXT_FIELD);
@@ -323,31 +295,32 @@ display_object (object *obj)
             }
             form_driver (form, REQ_VALIDATION);
             if (ch != 27) {
-                for (i = 0; i < obj->last; i++) 
-                {
+                for (i = 0; i < obj->last; i++) {
                     e = (entry *)obj->entries[i];
-                    if (e->type == CUIX_FIELD)
-                    {
+                    if (e->type == CUIX_FIELD) {
                         result = field_buffer(fields[i],0);
                         e->action (result);
                     }
                 }
             }
+            for (i = 0; i < obj->last; i++) {
+                free_field (fields[i]);
+            }
+            g_free (fields);
             unpost_form (form);
 
             break;
 
         case CUIX_MENU:
             w = get_labels_width (obj);
-            w = (w > CUIX_FIELD_WIDTH + 2 * X0_OFFSET) ? w : CUIX_FIELD_WIDTH + 2 * X0_OFFSET;
+            w = (w > CUIX_FIELD_WIDTH + 2 * X0_OFFSET) ?
+                w : CUIX_FIELD_WIDTH + 2 * X0_OFFSET;
             h = Y_OFFSET * obj->last + 2 * Y0_OFFSET;
             items = g_new0 (ITEM *, obj->last + 1);
-            for (i = 0; i < obj->last; i++) 
-            {
+            for (i = 0; i < obj->last; i++) {
                 e = (entry *)obj->entries[i];
                 o = (object *)obj->entries[i];
-                if (e->type == CUIX_MENUENTRY)
-                {
+                if (e->type == CUIX_MENUENTRY) {
                     items[i] = new_item (e->data, "");
                     set_item_userptr (items[i], (void*)e);
                 } else {
@@ -371,16 +344,15 @@ display_object (object *obj)
             keypad (cuix_win, TRUE);
             nonl ();
             set_menu_win (menu, cuix_win);
-            subwin = derwin (cuix_win, h - 2 * Y0_OFFSET, w - 2 * X0_OFFSET, Y0_OFFSET, X0_OFFSET);
+            subwin = derwin (cuix_win,
+                    h - 2 * Y0_OFFSET, w - 2 * X0_OFFSET, Y0_OFFSET, X0_OFFSET);
             set_menu_sub (menu, subwin);
             box (cuix_win, 0, 0);
             post_menu (menu);
             p_cuix = new_panel (cuix_win);
             top_panel (p_cuix);
-            while((ch = wgetch(cuix_win)) != 27 /* ESC */)
-            {       
-                switch(ch)
-                {       
+            while((ch = wgetch(cuix_win)) != 27 /* ESC */) {       
+                switch(ch) {       
                     case KEY_DOWN:
                         menu_driver(menu, REQ_DOWN_ITEM);
                         break;
@@ -405,6 +377,10 @@ display_object (object *obj)
                 }
             }
 end:
+            for (i = 0; i < obj->last; i++) {
+                free_item (items[i]);
+            }
+            g_free (items);
             unpost_menu (menu);
     }
 }

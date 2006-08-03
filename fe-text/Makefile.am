@@ -34,8 +34,8 @@ curses_sources = \
 	term-curses.c
 
 cuix_sources = \
-	cuix_api.c \
-	cuix_lib.c \
+	cuix-api.c \
+	cuix-lib.c \
 	cuix.c
 
 if NEED_TPARM

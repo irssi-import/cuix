@@ -1,19 +1,17 @@
 #include "module.h"
 #include "settings.h"
-#include "cuix_lib.h"
+#include "cuix-lib.h"
 #include "signals.h"
 #include "gui-windows.h"
 
 
-int
-do_nothing (char *foo)
+int do_nothing (char *foo)
 {
     (void)foo;
     return 0;
 }
 
-int
-change_nick (char *nick)
+int change_nick (char *nick)
 {
     SERVER_REC *server;
     WI_ITEM_REC *wiitem;
@@ -32,8 +30,7 @@ change_nick (char *nick)
 
 
 
-int 
-change_nick_form (char *nothing) {
+int change_nick_form (char *nothing) {
     object *form;
     entry *question, *answer;
     (void)nothing;
@@ -48,8 +45,7 @@ change_nick_form (char *nothing) {
 }
 
 
-int 
-about_list (char *nothing) 
+int about_list (char *nothing) 
 {
     object *list;
     entry *about, *entries[2];
@@ -67,8 +63,7 @@ about_list (char *nothing)
 
 
 
-int
-home_menu (char *nothing) 
+int home_menu (char *nothing) 
 {
     /* Objects declaration */
     object *root_menu, *submenu;

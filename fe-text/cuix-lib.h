@@ -8,7 +8,7 @@
 #endif
 #include <form.h>
 #include <panel.h>
-#include "cuix_api.h"
+#include "cuix-api.h"
 
 int home_menu (char *);
 
