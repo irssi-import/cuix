@@ -292,6 +292,7 @@ display_object (object *obj)
             top_panel (p_cuix);
             while((ch = wgetch(cuix_win)) != '\n' && ch != '\r' && ch != 27 /* ESC */)
             {       
+                fprintf(stderr, "ch: %d\n", ch);
                 switch(ch)
                 {       
                     case KEY_DOWN:

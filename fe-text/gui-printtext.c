@@ -28,7 +28,9 @@
 #include "term.h"
 #include "gui-printtext.h"
 #include "gui-windows.h"
+#ifdef HAVE_CUIX
 #include "cuix.h"
+#endif
 
 int mirc_colors[] = { 15, 0, 1, 2, 12, 4, 5, 6, 14, 10, 3, 11, 9, 13, 8, 7 };
 static int scrollback_lines, scrollback_time, scrollback_burst_remove;
@@ -102,7 +104,6 @@ void gui_printtext(int xpos, int ypos, const char *str)
 	printtext_gui(str);
 
 	next_xpos = next_ypos = -1;
-        /* cuix_refresh (); */
 }
 
 void gui_printtext_after(TEXT_DEST_REC *dest, LINE_REC *prev, const char *str)
@@ -115,7 +116,6 @@ void gui_printtext_after(TEXT_DEST_REC *dest, LINE_REC *prev, const char *str)
 	gui->insert_after = prev;
 	format_send_to_gui(dest, str);
 	gui->use_insert_after = FALSE;
-        /* cuix_refresh (); */
 }
 
 static void remove_old_lines(TEXT_BUFFER_VIEW_REC *view)
@@ -284,7 +284,9 @@ static void sig_gui_print_text(WINDOW_REC *window, void *fgcolor,
 	}
 	if (gui->use_insert_after)
                 gui->insert_after = insert_after;
+#ifdef HAVE_CUIX
         cuix_refresh ();
+#endif
 }
 
 static void sig_gui_printtext_finished(WINDOW_REC *window)

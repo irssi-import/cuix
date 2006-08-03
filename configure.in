@@ -355,7 +355,7 @@ if test "x$want_socks" = "xyes"; then
 fi
 
 if test "x$want_cuix" = "xyes"; then
-    AC_DEFINE(PROUT_CUIX, ,[Enable cuix support])
+    AC_DEFINE([HAVE_CUIX], [1] ,[Enable cuix support])
 fi
 
 dnl **
@@ -827,7 +827,6 @@ AM_CONDITIONAL(HAVE_PERL, test "$want_perl" != "no")
 AM_CONDITIONAL(HAVE_STATIC_PERL, test "$want_perl" = "static")
 AM_CONDITIONAL(NEED_TPARM, test "$need_tparm" = "yes")
 AM_CONDITIONAL(USE_CURSES, test "$want_terminfo" != "yes" -a "$want_termcap" != "yes")
-AM_CONDITIONAL(USE_CUIX, test "$want_cuix" = "yes")
 
 # move LIBS to PROG_LIBS so they're not tried to be used when linking eg. perl libraries
 PROG_LIBS=$LIBS
