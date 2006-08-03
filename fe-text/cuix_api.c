@@ -28,7 +28,7 @@ create_object (char *title, int type, void **entries)
     void **new_entries;
     int i;
 
-    obj = malloc (sizeof(object));
+    obj = g_malloc (sizeof(object));
     if (!obj)
     {
         return NULL;
@@ -37,7 +37,7 @@ create_object (char *title, int type, void **entries)
     obj->title = title;
     if (!entries)
     {
-        new_entries = calloc (INIT_ENTRIES, sizeof(void *));
+        new_entries = g_new0 (void *, INIT_ENTRIES);
         obj->entries = new_entries;
         obj->alloced = INIT_ENTRIES;
         obj->last = 0;
@@ -77,7 +77,7 @@ create_entry (char *label, int type, action_fn_type action)
 {
     entry *entry;
     
-    entry = malloc (sizeof(object));
+    entry = g_malloc (sizeof(object));
     if (!entry)
     {
         return NULL;
@@ -120,7 +120,7 @@ attach_entry (object *father, void *child)
      * twice more than previously */
     if (father->last >= father->alloced)
     {
-        entries = calloc (2 * father->alloced, sizeof(void *));
+        entries = g_new0 (void *,2 * father->alloced);
         if (!entries)
         {
             fprintf (stderr, "Problem with memory allocation, quitting now...\n");
@@ -130,7 +130,6 @@ attach_entry (object *father, void *child)
         {
             entries[i] = father->entries[i];
         }
-        fprintf(stderr, "father->entried: %p\n", father->entries);
         free (father->entries);
         father->entries = entries;
         father->alloced *= 2;
@@ -230,7 +229,6 @@ display_object (object *obj)
             w = get_labels_width (obj);
             h = Y_OFFSET * obj->last + 2 * Y0_OFFSET;
             get_center (root_window->win, h, w, &y, &x);
-            fprintf (stderr, "%d %d %d %d\n", h, w, y, x);
             cuix_win = newwin (h, w, y, x);
             box (cuix_win, 0, 0);
             p_cuix = new_panel(cuix_win);
@@ -262,7 +260,7 @@ display_object (object *obj)
             w = get_labels_width (obj);
             w = (w > CUIX_FIELD_WIDTH + 2 * X0_OFFSET) ? w : CUIX_FIELD_WIDTH + 2 * X0_OFFSET;
             h = Y_OFFSET * obj->last + 2 * Y0_OFFSET;
-            fields = calloc (obj->last + 1, sizeof(FIELD *));
+            fields = g_new0 (FIELD *, obj->last + 1);
             for (i = 0; i < obj->last; i++) 
             {
                 e = (entry *)obj->entries[i];
@@ -292,7 +290,6 @@ display_object (object *obj)
             top_panel (p_cuix);
             while((ch = wgetch(cuix_win)) != '\n' && ch != '\r' && ch != 27 /* ESC */)
             {       
-                fprintf(stderr, "ch: %d\n", ch);
                 switch(ch)
                 {       
                     case KEY_DOWN:
@@ -344,7 +341,7 @@ display_object (object *obj)
             w = get_labels_width (obj);
             w = (w > CUIX_FIELD_WIDTH + 2 * X0_OFFSET) ? w : CUIX_FIELD_WIDTH + 2 * X0_OFFSET;
             h = Y_OFFSET * obj->last + 2 * Y0_OFFSET;
-            items = calloc (obj->last + 1, sizeof(ITEM *));
+            items = g_new0 (ITEM *, obj->last + 1);
             for (i = 0; i < obj->last; i++) 
             {
                 e = (entry *)obj->entries[i];
