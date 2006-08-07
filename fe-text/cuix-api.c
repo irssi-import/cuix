@@ -41,7 +41,7 @@ object *create_object (char *title, int type, void **entries)
     } else {
         for (i = 0; ((entry **)entries)[i]; i++);
         obj->alloced = i;
-        obj->last = i - 1;
+        obj->last = i;
         obj->entries = entries;
     }
     return obj;
